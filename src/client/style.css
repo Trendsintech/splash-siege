@@ -1,0 +1,221 @@
+/* Splash Siege — dusk-garden arcade
+   Palette:
+   --night   #232C4A  storm dusk
+   --horizon #6E7FB2  rain haze
+   --soil    #4A3524  wet earth
+   --leaf    #57A96B  plant green
+   --balloon #FF5D73  danger pink
+   --sign    #F2E3C6  painted sign cream (text only, on dark) */
+
+:root {
+  --night: #232c4a;
+  --horizon: #6e7fb2;
+  --soil: #4a3524;
+  --leaf: #57a96b;
+  --balloon: #ff5d73;
+  --sign: #f2e3c6;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--night);
+  overflow: hidden;
+  touch-action: none;
+}
+
+#stage {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 2 / 3;
+  image-rendering: pixelated;
+  display: block;
+}
+
+/* HUD — a strip of painted garden-sign lettering */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 66.6vh);
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: var(--sign);
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+  font-size: clamp(12px, 2.4vh, 17px);
+}
+.hud-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.hud-label {
+  font-size: 0.62em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+#hud-saw { color: #ffd166; }
+
+/* Overlay screens */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  color: var(--sign);
+  /* Translucent so the living garden shows through behind the menus */
+  background: rgba(16, 21, 38, 0.78);
+  backdrop-filter: blur(2px);
+  overflow-y: auto;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+/* Flex centering clips overflowing content; margin-auto centers AND scrolls */
+.screen > :first-child { margin-top: auto; }
+.screen > :last-child { margin-bottom: auto; }
+.screen h1 {
+  font-size: clamp(30px, 7vh, 52px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 #000;
+}
+.screen h1 em { font-style: normal; color: var(--balloon); }
+.tagline { max-width: 42ch; opacity: 0.85; font-size: clamp(13px, 2.2vh, 16px); }
+
+.rules {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  max-width: 46ch;
+  font-size: clamp(12px, 2vh, 15px);
+  text-align: left;
+}
+.rules li::before { content: "❋ "; color: var(--leaf); }
+.rules b { color: #ffd166; }
+
+.controls-hint { font-size: 0.8em; opacity: 0.6; letter-spacing: 0.08em; }
+
+.big-btn {
+  font: inherit;
+  font-size: clamp(16px, 3vh, 22px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 12px 42px;
+  color: var(--night);
+  background: var(--sign);
+  border: 0;
+  border-bottom: 5px solid #b7a074;
+  cursor: pointer;
+}
+.big-btn:hover { background: #fff4dc; }
+.big-btn:focus-visible { outline: 3px solid var(--balloon); outline-offset: 3px; }
+.big-btn:active { transform: translateY(2px); border-bottom-width: 3px; }
+
+.best-line { font-size: 0.85em; color: #ffd166; }
+.best-line::before { content: "\2605 "; }
+
+/* CSS water balloon logo, gently bobbing */
+.logo-balloon {
+  width: clamp(52px, 11vh, 84px);
+  aspect-ratio: 0.88;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #ffbec8 0 18%, #ff768a 40%, var(--balloon) 75%);
+  position: relative;
+  animation: bob 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+.logo-balloon::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 14px solid #d64258;
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-9px) rotate(2deg); }
+}
+
+/* Secondary button: outlined, for the daily challenge */
+.big-btn.ghost {
+  background: transparent;
+  color: var(--sign);
+  border: 2px solid var(--sign);
+  border-bottom-width: 5px;
+  font-size: clamp(13px, 2.4vh, 17px);
+  padding: 10px 30px;
+}
+.big-btn.ghost:hover { background: rgba(242, 227, 198, 0.12); color: #fff4dc; }
+
+.score-box {
+  display: flex;
+  gap: 36px;
+  font-size: clamp(18px, 3.4vh, 26px);
+}
+.score-box > div { display: flex; flex-direction: column; gap: 2px; }
+
+#leaderboard { min-height: 1em; font-size: clamp(12px, 2vh, 15px); }
+#leaderboard ol { list-style: none; display: grid; gap: 3px; }
+#leaderboard .rank { color: var(--leaf); margin-right: 0.6em; }
+#leaderboard .lb-title {
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.75em;
+  opacity: 0.65;
+  margin-bottom: 6px;
+}
+
+/* Touch controls */
+#touch-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 14px;
+  gap: 10px;
+}
+#touch-controls button {
+  font-size: 26px;
+  width: 76px;
+  height: 64px;
+  border: 2px solid var(--sign);
+  border-radius: 10px;
+  background: rgba(35, 44, 74, 0.55);
+  color: var(--sign);
+  -webkit-user-select: none;
+  user-select: none;
+}
+#touch-controls button:active { background: rgba(242, 227, 198, 0.28); }
+#t-shoot { flex: 1; max-width: 160px; color: var(--balloon); }
+
+@media (max-height: 600px) {
+  .screen { gap: 8px; }
+  .logo-balloon { width: 44px; }
+  .tagline { font-size: 12px; }
+  .rules { gap: 4px; font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+[hidden] { display: none !important; }

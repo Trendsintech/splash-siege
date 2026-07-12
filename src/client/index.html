@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Splash Siege</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="stage">
+    <canvas id="game" width="480" height="720" aria-label="Splash Siege game"></canvas>
+
+    <!-- HUD -->
+    <header id="hud" hidden>
+      <div class="hud-cell"><span class="hud-label">Score</span><span id="hud-score">0</span></div>
+      <div class="hud-cell"><span class="hud-label">Level</span><span id="hud-level">1/6</span></div>
+      <div class="hud-cell"><span class="hud-label">Pops</span><span id="hud-pops">0/10</span></div>
+      <div class="hud-cell"><span class="hud-label">Cuts</span><span id="hud-saw">–</span></div>
+    </header>
+
+    <!-- Start screen -->
+    <section id="screen-start" class="screen">
+      <div class="logo-balloon" aria-hidden="true"></div>
+      <h1>Splash <em>Siege</em></h1>
+      <p class="tagline">The sky is throwing water balloons. The garden is very grateful. You are not.</p>
+      <ul class="rules">
+        <li><b>Shoot balloons</b> before they land — water grows plants, and a plant that <b>reaches the top</b> ends the run.</li>
+        <li>Grab <b>saws</b> (3 cuts each) and walk over a plant to cut it. No saw? <b>Chip</b> brown plants with shots.</li>
+        <li>Chain pops without missing for <b>×2/×3</b> score — and a last-second cut is a <b>CLUTCH +100</b>.</li>
+        <li>Survive <b>6 levels</b>, each faster and greedier than the last.</li>
+      </ul>
+      <p class="controls-hint">← → or A/D to move · Space or tap to shoot</p>
+      <button id="btn-start" class="big-btn">Play</button>
+      <button id="btn-daily" class="big-btn ghost">Daily Challenge</button>
+      <p id="best-line" class="best-line" hidden></p>
+    </section>
+
+    <!-- Game over -->
+    <section id="screen-over" class="screen" hidden>
+      <h1 id="over-title">The garden won</h1>
+      <p id="over-sub" class="tagline"></p>
+      <div class="score-box">
+        <div><span class="hud-label">Final score</span><span id="final-score">0</span></div>
+        <div><span class="hud-label">Reached level</span><span id="final-level">1</span></div>
+      </div>
+      <div id="leaderboard"></div>
+      <button id="btn-retry" class="big-btn">Play again</button>
+    </section>
+
+    <!-- Touch controls -->
+    <nav id="touch-controls" hidden>
+      <button id="t-left" aria-label="Move left">◀</button>
+      <button id="t-shoot" aria-label="Shoot">●</button>
+      <button id="t-right" aria-label="Move right">▶</button>
+    </nav>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

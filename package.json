@@ -1,0 +1,26 @@
+{
+  "name": "splash-siege",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:client": "node -e \"const fs=require('fs');fs.rmSync('dist/client',{recursive:true,force:true});fs.cpSync('src/client','dist/client',{recursive:true});\"",
+    "build:server": "esbuild src/server/index.ts --bundle --platform=node --format=cjs --outfile=dist/server/index.cjs",
+    "build": "npm run build:client && npm run build:server",
+    "dev": "npm run build && devvit playtest",
+    "deploy": "npm run build && devvit upload",
+    "launch": "npm run deploy && devvit publish"
+  },
+  "dependencies": {
+    "@devvit/web": "0.13.2",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "devvit": "0.13.2",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  },
+  "license": "BSD-3-Clause"
+}
