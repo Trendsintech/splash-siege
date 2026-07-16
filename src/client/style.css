@@ -193,6 +193,16 @@ canvas {
   padding: 0 14px;
   gap: 10px;
 }
+#btn-mute {
+  background: transparent;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  filter: grayscale(0.2);
+}
+
 #touch-controls button {
   font-size: 26px;
   width: 76px;

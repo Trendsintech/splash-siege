@@ -51,6 +51,77 @@
   const keys = new Set();
   let touchShoot = false;
 
+  // ---------- Sound: tiny synthesized SFX via Web Audio ----------
+  let audioCtx = null;
+  let muted = false;
+  let noiseBuf = null;
+  function ac() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function noise(ctx) {
+    if (!noiseBuf) {
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    return src;
+  }
+  function tone(ctx, type, f0, f1, dur, vol, t0) {
+    const o = ctx.createOscillator(), gn = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur);
+    gn.gain.setValueAtTime(vol, t0);
+    gn.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(gn).connect(ctx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function sfx(name) {
+    if (muted) return;
+    try {
+      const ctx = ac();
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      if (name === 'shoot') {
+        tone(ctx, 'triangle', 880, 300, 0.07, 0.12, t);
+      } else if (name === 'pop') {
+        tone(ctx, 'sine', 620, 90, 0.09, 0.3, t);
+        const n = noise(ctx), g2 = ctx.createGain(), hp = ctx.createBiquadFilter();
+        hp.type = 'highpass'; hp.frequency.value = 1800;
+        g2.gain.setValueAtTime(0.25, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        n.connect(hp).connect(g2).connect(ctx.destination);
+        n.start(t); n.stop(t + 0.07);
+      } else if (name === 'splash') {
+        const n = noise(ctx), g2 = ctx.createGain(), lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(2200, t);
+        lp.frequency.exponentialRampToValueAtTime(240, t + 0.28);
+        g2.gain.setValueAtTime(0.3, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        n.connect(lp).connect(g2).connect(ctx.destination);
+        n.start(t); n.stop(t + 0.32);
+      } else if (name === 'saw') {
+        tone(ctx, 'sawtooth', 180, 70, 0.22, 0.22, t);
+        tone(ctx, 'sawtooth', 187, 74, 0.22, 0.14, t); // detuned pair = mechanical growl
+        const n = noise(ctx), g2 = ctx.createGain(), bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 2;
+        g2.gain.setValueAtTime(0.14, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        n.connect(bp).connect(g2).connect(ctx.destination);
+        n.start(t); n.stop(t + 0.22);
+      }
+    } catch { /* audio is decoration — never let it break the game */ }
+  }
+
   // ---------- Daily challenge: seeded RNG drives all spawn decisions ----------
   let mode = 'classic';
   let roll = Math.random; // reseeded from the date for daily runs
@@ -140,11 +211,13 @@
   function shoot() {
     if (state !== 'playing' || gunCooldown > 0) return;
     gunCooldown = 0.26;
+    sfx('shoot');
     bullets.push({ x: player.x, y: GROUND_Y - player.h - 6, vy: -540 });
   }
 
   function popBalloon(b, byBullet) {
     balloons.splice(balloons.indexOf(b), 1);
+    sfx('pop');
     pops++;
     const mult = streak >= 10 ? 3 : streak >= 5 ? 2 : 1;
     const pts = (b.saw ? 15 : 10) * mult;
@@ -173,6 +246,7 @@
   function cutPlant(lane) {
     player.saw--;
     cutCooldown = 0.35;
+    sfx('saw');
     const clutch = plants[lane] >= MAX_PLANT * 0.75;
     score += clutch ? 100 : 25;
     floatText(laneCenter(lane), GROUND_Y - plants[lane] - 12,
@@ -232,6 +306,7 @@
       b.x += Math.cos(elapsed * b.swayF + b.swayP) * b.swayA * dt;
       b.x = Math.max(b.r, Math.min(W - b.r, b.x));
       if (b.y + b.r >= GROUND_Y) {
+        sfx('splash');
         balloons.splice(balloons.indexOf(b), 1);
         burst(b.x, GROUND_Y - 4, '#bfe8ff', 18, 150, 300);
         growPlant(laneOf(b.x), cfg().growth);
@@ -580,6 +655,10 @@
 
   if (matchMedia('(pointer: coarse)').matches) $('touch-controls').hidden = false;
 
+  $('btn-mute').addEventListener('click', () => {
+    muted = !muted;
+    $('btn-mute').textContent = muted ? '\u{1F507}' : '\u{1F50A}';
+  });
   $('btn-start').addEventListener('click', () => startGame('classic'));
   $('btn-daily').addEventListener('click', () => startGame('daily'));
   $('btn-retry').addEventListener('click', () => startGame(mode));
@@ -587,6 +666,7 @@
     new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   function startGame(m) {
+    ac(); // unlock audio inside the user gesture
     mode = m === 'daily' ? 'daily' : 'classic';
     roll = mode === 'daily' ? mulberry32(Number(todayKey().replace(/-/g, ''))) : Math.random;
     resetGame();
